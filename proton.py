@@ -2,10 +2,18 @@
 from icecream import ic
 from bytewax.outputs import DynamicSink, StatelessSinkPartition
 from proton_driver import client
+import json
+import numpy as np
 
 __all__ = [
     "ProtonSink",
 ]
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 class _ProtonSinkPartition(StatelessSinkPartition):
     def __init__(self, stream: str, host: str):
@@ -16,12 +24,11 @@ class _ProtonSinkPartition(StatelessSinkPartition):
         self.client.execute(sql)
 
     def write_batch(self, items):
-        ic(f"inserting data {items}")
         rows=[]
         for item in items:
-            rows.append([item]) # single column in each row
+            str=json.dumps(item[0],cls=NumpyEncoder)
+            rows.append([str]) # single column in each row
         sql = f"INSERT INTO `{self.stream}` (raw) VALUES"
-        ic(f"inserting data: {sql}")
         self.client.execute(sql,rows)
 
 class ProtonSink(DynamicSink):
