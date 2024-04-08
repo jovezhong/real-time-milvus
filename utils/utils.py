@@ -1,3 +1,4 @@
+from icecream import ic
 import time
 import html
 import requests
@@ -58,6 +59,7 @@ def safe_request(url, headers={}, wait_time=1, max_retries=3):
 
 
 def prep_text(metadata_content, tokenizer):
+    ic()
     metadata_content["text"] = html.unescape(metadata_content["text"])
     metadata_content["text"] = re.sub(pattern, "", metadata_content["text"])
     metadata_content["text"] = clean_non_ascii_chars(
@@ -70,6 +72,7 @@ def prep_text(metadata_content, tokenizer):
 
 
 def parse_html(metadata_content, tokenizer):
+    ic()
     try:
         # logger.info(
         #     f"parsing content from: {metadata_content['url']} - {metadata_content['content'][:200]}"
@@ -110,6 +113,7 @@ def hf_document_embed(document, tokenizer, model, torch, length=384):
     """
     Create an embedding from the provided document
     """
+    ic()
     text_chunks = document.pop("text")
     documents = []
     for i, chunk in enumerate(text_chunks):

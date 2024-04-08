@@ -1,3 +1,4 @@
+from icecream import ic
 import requests
 from datetime import timedelta
 import time
@@ -6,17 +7,15 @@ import logging
 import atexit
 
 import bytewax.operators as op
+from bytewax.connectors.stdio import StdOutSink
 from bytewax.dataflow import Dataflow
 from bytewax.inputs import SimplePollingSource
 
-from milvus_connector import MilvusOutput
 from utils.utils import safe_request, parse_html, hf_document_embed, prep_text
 from data.schemas import VECTOR_DIMENSIONS, STORY_SCHEMA, COMMENT_SCHEMA
 
 from transformers import AutoTokenizer, AutoModel
 import torch
-
-from milvus import default_server
 
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
@@ -24,21 +23,9 @@ model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from milvus import default_server
-
-# Optional, if you want store all related data to specific location
-# default it wil using %APPDATA%/milvus-io/milvus-server
-default_server.set_base_dir('test_milvus')
-
-# Optional, if you want cleanup previous data
-default_server.cleanup()
-
-# star you milvus server
-default_server.start()
-
 class HNSource(SimplePollingSource):
     def next_item(self):
-        return (
+        return ic(
             "GLOBAL_ID",
             requests.get("https://hacker-news.firebaseio.com/v0/maxitem.json").json(),
         )
@@ -47,7 +34,7 @@ def get_id_stream(old_max_id, new_max_id) -> Tuple[str,list]:
     if old_max_id is None:
         # Get the last 150 items on the first run.
         old_max_id = new_max_id - 150
-    return (new_max_id, range(old_max_id, new_max_id))
+    return ic(new_max_id, range(old_max_id, new_max_id))
 
 def download_metadata(hn_id) -> Optional[dict]:
     data = requests.get(
@@ -57,14 +44,15 @@ def download_metadata(hn_id) -> Optional[dict]:
     if data is None:
         logger.warning(f"Couldn't fetch item {hn_id}, skipping")
         return None
-    
+
     if data["type"] in ["story", "comment"] and not data.get("deleted") and not data.get("dead"):
         return data
     else:
-        logger.warning(f"unknown item {hn_id}, skipping it")
+        # logger.warning(f"unknown item {hn_id}, skipping it")
         return None
 
 def download_html(metadata):
+    ic()
     try:
         html = safe_request(metadata["url"])
         return {**metadata, "content": html}
@@ -73,7 +61,7 @@ def download_html(metadata):
         return None
 
 
-def recurse_tree(metadata, og_metadata=None) -> any: 
+def recurse_tree(metadata, og_metadata=None) -> any:
     if not og_metadata:
         og_metadata = metadata
     try:
@@ -90,6 +78,7 @@ def recurse_tree(metadata, og_metadata=None) -> any:
 
 def run_hn_flow(polling_interval=15):
     flow = Dataflow("hn_stream")
+    ic()
     max_id = op.input(
         "in", flow, HNSource(timedelta(seconds=polling_interval))
     )
@@ -98,7 +87,7 @@ def run_hn_flow(polling_interval=15):
 
 
     enriched = op.filter_map("enrich", id_stream, download_metadata)
-    
+
     branch_out = op.branch(
         "split_comments", enriched, lambda document: document["type"] == "story"
     )
@@ -117,7 +106,6 @@ def run_hn_flow(polling_interval=15):
         ),
     )
 
-
     # Comments
     comments = branch_out.falses
     comments = op.filter_map("read_parent", comments, recurse_tree)
@@ -131,21 +119,18 @@ def run_hn_flow(polling_interval=15):
             document, tokenizer, model, torch, length=VECTOR_DIMENSIONS
         ),
     )
-    op.inspect_debug("stories2", stories_embeddings)
-    op.inspect_debug("comments2", comments)
+    # op.inspect_debug("stories2", stories_embeddings)
+    # op.inspect_debug("comments2", comments)
     op.output(
         "stories_out",
         stories_embeddings,
-        MilvusOutput("hn_stories", STORY_SCHEMA),
+        StdOutSink()
+        # MilvusOutput("hn_stories", STORY_SCHEMA),
     )
     op.output(
         "comments_out",
         comments,
-        MilvusOutput("hn_comments", COMMENT_SCHEMA),
+        StdOutSink()
+        # MilvusOutput("hn_comments", COMMENT_SCHEMA),
     )
     return flow
-
-
-@atexit.register
-def goodbye():
-    default_server.stop()
