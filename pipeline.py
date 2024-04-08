@@ -2,6 +2,7 @@ from icecream import ic
 import requests
 from datetime import timedelta
 import time
+import os
 from typing import Any, Optional, Tuple
 import logging
 import atexit
@@ -16,6 +17,8 @@ from data.schemas import VECTOR_DIMENSIONS, STORY_SCHEMA, COMMENT_SCHEMA
 
 from transformers import AutoTokenizer, AutoModel
 import torch
+
+from proton import ProtonSink
 
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
@@ -124,13 +127,11 @@ def run_hn_flow(polling_interval=15):
     op.output(
         "stories_out",
         stories_embeddings,
-        StdOutSink()
-        # MilvusOutput("hn_stories", STORY_SCHEMA),
+        ProtonSink("hn_stories_raw", os.environ.get("PROTON_HOST","127.0.0.1"))
     )
     op.output(
         "comments_out",
         comments,
-        StdOutSink()
-        # MilvusOutput("hn_comments", COMMENT_SCHEMA),
+        ProtonSink("hn_comments_raw", os.environ.get("PROTON_HOST","127.0.0.1"))
     )
     return flow
