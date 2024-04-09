@@ -13,12 +13,13 @@ from bytewax.dataflow import Dataflow
 from bytewax.inputs import SimplePollingSource
 
 from utils.utils import safe_request, parse_html, hf_document_embed, prep_text
-from data.schemas import VECTOR_DIMENSIONS, STORY_SCHEMA, COMMENT_SCHEMA
 
 from transformers import AutoTokenizer, AutoModel
 import torch
 
 from proton import ProtonSink
+
+VECTOR_DIMENSIONS=384
 
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
