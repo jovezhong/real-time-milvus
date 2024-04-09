@@ -3,6 +3,7 @@
 This demo project is largely based on the great work from Bytewax: https://bytewax.io/blog/stream-process-embed-repeat
 
 The "Dataflow":
+![dataflow](https://github.com/jovezhong/real-time-milvus/blob/timeplus/dataflow.png)
 
 - Input - stream stories and comments from [HackerNews API](https://github.com/HackerNews/API).
 - Preprocess - retrieve updates and filter for stories/comments.
