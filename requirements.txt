@@ -5,3 +5,7 @@ bytewax==0.18.2
 fake-useragent==1.4.0
 icecream
 proton-driver
+pymilvus==2.3.4
+streamlit
+jproperties
+watchdog
