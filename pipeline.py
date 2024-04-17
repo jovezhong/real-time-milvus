@@ -79,7 +79,7 @@ def recurse_tree(metadata, og_metadata=None) -> any:
     except ValueError:
         return None
 
-
+# main entry
 def run_hn_flow(polling_interval=15):
     flow = Dataflow("hn_stream")
     ic()
@@ -97,18 +97,18 @@ def run_hn_flow(polling_interval=15):
     )
 
     # Stories
-    stories = branch_out.trues
-    stories_htmls = op.filter_map("fetch_html", stories, download_html)
-    stories_parsed = op.filter_map(
-        "parse_docs", stories_htmls, lambda content: parse_html(content, tokenizer)
-    )
-    stories_embeddings = op.map(
-        "story_embeddings",
-        stories_parsed,
-        lambda document: hf_document_embed(
-            document, tokenizer, model, torch, length=VECTOR_DIMENSIONS
-        ),
-    )
+    # stories = branch_out.trues
+    # stories_htmls = op.filter_map("fetch_html", stories, download_html)
+    # stories_parsed = op.filter_map(
+    #     "parse_docs", stories_htmls, lambda content: parse_html(content, tokenizer)
+    # )
+    # stories_embeddings = op.map(
+    #     "story_embeddings",
+    #     stories_parsed,
+    #     lambda document: hf_document_embed(
+    #         document, tokenizer, model, torch, length=VECTOR_DIMENSIONS
+    #     ),
+    # )
 
     # Comments
     comments = branch_out.falses
@@ -123,13 +123,12 @@ def run_hn_flow(polling_interval=15):
             document, tokenizer, model, torch, length=VECTOR_DIMENSIONS
         ),
     )
-    # op.inspect_debug("stories2", stories_embeddings)
-    # op.inspect_debug("comments2", comments)
-    op.output(
-        "stories_out",
-        stories_embeddings,
-        ProtonSink("hn_stories_raw", os.environ.get("PROTON_HOST","127.0.0.1"))
-    )
+
+    # op.output(
+    #     "stories_out",
+    #     stories_embeddings,
+    #     ProtonSink("hn_stories_raw", os.environ.get("PROTON_HOST","127.0.0.1"))
+    # )
     op.output(
         "comments_out",
         comments,

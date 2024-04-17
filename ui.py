@@ -24,8 +24,8 @@ def hf_document_embed(chunk, tokenizer, model, torch, length=384):
     return embed.flatten()
 
 with st.form("my_form"):
-    st.write("What's going on at Hacker News today?")
-    text_val = st.text_area("What do you want to search?",value="What's new for Play Station?")
+    st.image("banner.png")
+    text_val = st.text_area("What's going on at Hacker News today?",value="What's new for Play Station?")
 
     submitted = st.form_submit_button("Go!")
     if submitted:
