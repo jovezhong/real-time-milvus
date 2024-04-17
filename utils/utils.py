@@ -72,11 +72,11 @@ def prep_text(metadata_content, tokenizer):
 
 
 def parse_html(metadata_content, tokenizer):
-    ic()
+    # ic()
     try:
-        # logger.info(
-        #     f"parsing content from: {metadata_content['url']} - {metadata_content['content'][:200]}"
-        # )
+        ic(
+            f"parsing content from: {metadata_content['url']} - {metadata_content['content'][:200]}"
+        )
 
         text = []
         article_elements = partition_html(text=metadata_content["content"])
@@ -104,9 +104,9 @@ def parse_html(metadata_content, tokenizer):
         # remove the content after it is cleaned
         metadata_content.pop("content")
         return {**metadata_content, "text": text}
-    except TypeError:
-        logger.warning(f"moving on... can't parse: {metadata_content}")
-        return None
+    except (TypeError, ValueError):
+        logger.warning(f"moving on... can't parse: {metadata_content['content'][:200]}")
+        return {**metadata_content, "text": "Failed to parse HTML content."}
 
 
 def hf_document_embed(document, tokenizer, model, torch, length=384):
