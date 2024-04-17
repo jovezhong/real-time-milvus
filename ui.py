@@ -42,5 +42,10 @@ with st.form("my_form"):
             for r in results[0]:
                 st.slider("distance:",min_value=0.0, max_value=1.0,value=r.distance,key=r.id,disabled=True)
                 matching = r.entity
-                st.markdown(f"{datetime.fromtimestamp(matching.get('time'))} - {matching.get('by')} 🗣️\n> {matching.get('text')}")
+                time_diff = datetime.now() - datetime.fromtimestamp(matching.get('time'))
+                minutes_ago = divmod(time_diff.total_seconds(), 60)[0]
+                time_display = datetime.fromtimestamp(matching.get('time'))
+                if minutes_ago < 120:
+                    time_display = f"{int(minutes_ago)} minutes ago"
+                st.markdown(f"{time_display} - {matching.get('by')} 🗣️\n> {matching.get('text')}")
                 st.divider()
