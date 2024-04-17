@@ -1,12 +1,14 @@
-# Streaming LLM
+# Streaming LLM With Timeplus and Zilliz
 
-This demo project is largely based on the great work from Bytewax: https://bytewax.io/blog/stream-process-embed-repeat
+> [!NOTE]
+> This demo project is largely based on the great work from Bytewax: https://bytewax.io/blog/stream-process-embed-repeat
 
-The "Dataflow":
-![dataflow](https://github.com/jovezhong/real-time-milvus/blob/timeplus/dataflow.png)
+## Dataflow
+
+![dataflow](dataflow.png)
 
 - Input - stream stories and comments from [HackerNews API](https://github.com/HackerNews/API).
-- Preprocess - retrieve updates and filter for stories/comments.
+- Pre-process - retrieve updates and filter for stories/comments.
 - Retrieve Content - download the html and parse it into useable text. Thanks to awesome [Unstructured.io](https://github.com/Unstructured-IO/unstructured).
 - Vectorize - Create an embedding or list of embeddings for text using [Hugging Face Transformers](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2).
 - Output - write the JSON document with embeddings and other fields to a local [Timeplus Proton](https://github.com/timeplus-io/proton) server, into the data streams.
@@ -33,7 +35,7 @@ Create a new folder and run following commands
 
 ```bash
 curl https://install.timeplus.com | sh
-proton server start
+proton server
 ```
 
 ### Apache Kafka and Kafka Connect
@@ -90,6 +92,9 @@ collection.name=comments
 topics=comments
 ```
 
+Please note the a collection is created in Zilliz Cloud with the following schema:
+![dataflow](zilliz_comments.png)
+
 ## Start the Kafka stack
 
 Open a terminal window and change directory to `kafka_2.13-3.6.1`, then
@@ -122,6 +127,16 @@ You can even do some filter in Timeplus Proton, to only send interested contents
 ```sql
 WHERE text ilike '%play%'
 ```
+
+## Build a Web UI
+
+A streamlit app is available in this repo. Simply run this commmand with the venv activated:
+
+```bash
+streamlit run ui.py
+```
+
+It will read the configuration from `milvus-sink-connector.properties` file. Make sure you change the endpoint and token for Milvus or Zilliz.
 
 ## Wrap Up
 
