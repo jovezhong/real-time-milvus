@@ -81,7 +81,7 @@ Please follow the kafka-connect-milvus [docs](https://github.com/zilliztech/kafk
 - Setup JVM
 - Install Apache Kafka with Kafka Connect, such as `kafka_2.13-3.6.1`
 - Put `zilliz-kafka-connect-milvus-0.1.1` folder in `kafka_2.13-3.6.1\libs\`
-- Create `kafka_2.13-3.6.1\config\milvus-sink-connector.properties` with content like
+- Edit the `milvus-sink-connector.properties` file with proper Milvus/Zilliz endpoint and token. Then put it in `kafka_2.13-3.6.1\config\`:
 
 ```properties
 name=zilliz-kafka-connect-milvus
