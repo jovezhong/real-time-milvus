@@ -36,7 +36,7 @@ with st.form("my_form"):
             text_val, tokenizer, model, torch, length=VECTOR_DIMENSIONS
         )
 
-        results = collection.search(data=[embedding], anns_field="doc_embedding", param={}, limit=10, output_fields=["by", "time","text"], expr=f'type == "comment"')
+        results = collection.search(data=[embedding], anns_field="doc_embedding", param={'level':3}, limit=10, output_fields=["by", "time","text"], expr=f'type == "comment"', consistency_level="Strong")
 
         with st.container(height=500):
             for r in results[0]:
