@@ -40,7 +40,7 @@ with st.form("my_form"):
 
         with st.container(height=500):
             for r in results[0]:
-                st.slider("distance:",min_value=0.0, max_value=1.0,value=r.distance,disabled=True)
+                st.slider("distance:",min_value=0.0, max_value=1.0,value=r.distance,key=r.id,disabled=True)
                 matching = r.entity
                 st.markdown(f"{datetime.fromtimestamp(matching.get('time'))} - {matching.get('by')} 🗣️\n> {matching.get('text')}")
                 st.divider()
