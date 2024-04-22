@@ -8,12 +8,13 @@
 ![dataflow](dataflow.png)
 
 - Input - stream stories and comments from [HackerNews API](https://github.com/HackerNews/API).
-- Pre-process - retrieve updates and filter for stories/comments.
-- Retrieve Content - download the html and parse it into useable text. Thanks to awesome [Unstructured.io](https://github.com/Unstructured-IO/unstructured).
+- Pre-process - retrieve updates and filter for stories/comments via [bytewax](https://bytewax.io).
+- Retrieve Content - download the html and parse it into usable text. Thanks to awesome [Unstructured.io](https://github.com/Unstructured-IO/unstructured).
 - Vectorize - Create an embedding or list of embeddings for text using [Hugging Face Transformers](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2).
 - Output - write the JSON document with embeddings and other fields to a local [Timeplus Proton](https://github.com/timeplus-io/proton) server, into the data streams.
-- Filter/Route - use streaming SQL to filter/transform JSON data and send output to a local Kafka server
-- Forward - use milvus plugin for Kafka Connect to forward the data to Zilliz Cloud
+- Filter/Route - use streaming SQL to filter/transform JSON data and send output to a local Kafka server.
+- Forward - use [milvus plugin for Kafka Connect](https://github.com/zilliztech/kafka-connect-milvus) to forward the data to Zilliz Cloud.
+- Query - build a [streamlit](https://streamlit.io/) web application to query the live data with the same embedding model.
 
 ## Setting up your environment
 
@@ -29,7 +30,7 @@ pip install -r requirements.txt
 
 ### Timeplus Proton
 
-It's recommended to install Timeplus Proton as a binary, instead as Docker. So that it can connect to the local Kafka server without extra configuration.
+It's recommended to install Timeplus Proton as a binary, instead as a Docker container. So that it can connect to the local Kafka server without extra configuration.
 
 Create a new folder and run following commands
 
@@ -72,7 +73,7 @@ SELECT cast(raw:doc_embedding,'array(float32)') AS doc_embedding FROM hn_comment
 
 ## Set Up Kafka and Zilliz
 
-In [the original Bytewax demo app](https://github.com/bytewax/real-time-milvus/), Milvus Lite is used to run Milvus easily in Python application. While in this example, we are integrating with the managed Milvus in the cloud, i.e. Zilliz Cloud.
+In [the original Bytewax demo app](https://github.com/bytewax/real-time-milvus/), Milvus Lite is used to run Milvus easily in Python applications. While in this example, we are integrating with the managed Milvus in the cloud, i.e. Zilliz Cloud.
 
 Timeplus Proton will write transformed data to Kafka topics. Then the data is forwarded to Zilliz Cloud via https://github.com/zilliztech/kafka-connect-milvus
 
@@ -102,12 +103,12 @@ Open a terminal window and change directory to `kafka_2.13-3.6.1`, then
 1. Start the ZooKeeper service via `bin/zookeeper-server-start.sh config/zookeeper.properties`
 2. Start the Kafka broker service via `bin/kafka-server-start.sh config/server.properties`
 3. Create a topic via `bin/kafka-topics.sh --create --topic comments --bootstrap-server localhost:9092`
-4. Make sure you create a collection in Zilliz Cloud: `comments` with dimension=384 (screenshot)
+4. Make sure you create a collection in Zilliz Cloud: `comments` with dimension=384
 5. Start the Kafka Connect service via `bin/connect-standalone.sh config/connect-standalone.properties config/milvus-sink-connector.properties`
 
 ## Streaming ETL with Timeplus Proton
 
-The following SQL statements will setup a pipeline to read all hacker news comments and send them to the Kafka topic. Via the `zilliz-kafka-connect-milvus` such live data will be immediately available in Zilliz Cloud.
+The following SQL statements will set up a pipeline to read all hacker news comments and send them to the Kafka topic. Via the `zilliz-kafka-connect-milvus` such live data will be immediately available in Zilliz Cloud.
 
 ```sql
 CREATE EXTERNAL STREAM comments_topic(
@@ -122,7 +123,7 @@ CREATE MATERIALIZED VIEW mv INTO comments_topic AS
   FROM hn_comments_raw WHERE _tp_time>earliest_ts();
 ```
 
-You can even do some filter in Timeplus Proton, to only send interested contents with embedding to Zilliz, such as changing the MATERIALIZED VIEW and add
+You can even do some filters in Timeplus Proton, to only send interested contents with embedding to Zilliz, such as changing the MATERIALIZED VIEW and adding the following to the end of the MATERIALIZED VIEW.
 
 ```sql
 WHERE text ilike '%play%'
